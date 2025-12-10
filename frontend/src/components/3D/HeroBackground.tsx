@@ -1,43 +1,75 @@
-"use client"; // Essential for Next.js to treat this as a client-side component
+'use client'
 
-import { Canvas,useFrame}from '@react-three/fiber'  
-import { Points, OrbitControls, PointMaterial } from '@react-three/drei'
-import * as random from 'maath/random'
-import { useState,useRef } from 'react';
-
-function Stars(props:any){
-    const ref = useRef<any>(null)
-
-    // Generate random points in 3D space
-    const [sphere] = useState(()=>random.inSphere(new Float32Array(5000),{radius:1.2    }))
-
-    useFrame((state,delta)=>{
-        ref.current.rotation.x -= delta/10
-        ref.current.rotation.y -= delta/15
-    })
-    return (
-    <group rotation={[0, 0, Math.PI / 4]}>
-      <Points ref={ref} positions={sphere} stride={3} frustumCulled={false} {...props}>
-        <PointMaterial
-          transparent
-          color="#8884d8" // A nice AI purple
-          size={0.005}
-          sizeAttenuation={true}
-          depthWrite={false}
-        />
-      </Points>
-    </group>
-  )
-}
+import { useEffect, useRef } from 'react'
 
 export default function HeroBackground() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Set canvas size
+    const resize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    // Create stars
+    const stars: { x: number; y: number; radius: number; vx: number; vy: number }[] = []
+    for (let i = 0; i < 200; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5
+      })
+    }
+
+    // Animation loop
+    let animationId: number
+    const animate = () => {
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.05)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      stars.forEach(star => {
+        star.x += star.vx
+        star.y += star.vy
+
+        // Wrap around edges
+        if (star.x < 0) star.x = canvas.width
+        if (star.x > canvas.width) star.x = 0
+        if (star.y < 0) star.y = canvas.height
+        if (star.y > canvas.height) star.y = 0
+
+        // Draw star
+        ctx.beginPath()
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2)
+        ctx.fillStyle = '#8884d8'
+        ctx.fill()
+      })
+
+      animationId = requestAnimationFrame(animate)
+    }
+    animate()
+
+    return () => {
+      window.removeEventListener('resize', resize)
+      cancelAnimationFrame(animationId)
+    }
+  }, [])
+
   return (
-    <Canvas
-      camera={{ position: [0, 0, 1] }}
-      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-    >
-      <Stars />
-      <OrbitControls enableZoom={false} />
-    </Canvas>
-  );
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ background: 'rgb(2, 6, 23)' }}
+    />
+  )
 }

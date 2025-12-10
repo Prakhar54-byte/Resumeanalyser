@@ -61,10 +61,12 @@
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+    scroll-behavior: smooth;
   }
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+    scroll-behavior: smooth;
   }
 }
 
@@ -89,4 +91,20 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gradient animation for text */
+@keyframes gradient {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 3s ease infinite;
 }
